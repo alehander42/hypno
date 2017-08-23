@@ -1,0 +1,2 @@
+class HypnoError(Exception):
+    pass
