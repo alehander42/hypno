@@ -5,7 +5,8 @@ class HypnoValue:
     A base class for each Hypno value
     subclasses will contain its type, its fields, methods and state
     '''
-    def __init__(self, hypno_type):
+    def __init__(self, hypno_type, fields=None):
+        self.fields = fields or {}
         self.hypno_type = hypno_type
 
     def render(self):
@@ -15,7 +16,12 @@ class HypnoClass(HypnoValue):
     '''
     Contains class info
     '''
-    def __init__(self, label, base=None, methods=None):
+    def __init__(self, label, base=None, methods=None, hypno_type=False):
+        if not hypno_type:
+            self.hypno_type = HYPNO_TYPE
+        else:
+            self.hypno_type = self
+        self.fields = {}
         self.label = label
         self.base = base
         self.methods = methods or {}
@@ -23,7 +29,9 @@ class HypnoClass(HypnoValue):
     def render(self):
         return 'class<%s>' % self.label
 
+HYPNO_TYPE   = HypnoClass('type', base=None, hypno_type=True)
 HYPNO_OBJECT = HypnoClass('object', base=None)
+HYPNO_TYPE.base = HYPNO_OBJECT # chicken egg
 HYPNO_INT    = HypnoClass('int', base=HYPNO_OBJECT)
 HYPNO_STRING = HypnoClass('str', base=HYPNO_OBJECT)
 HYPNO_BOOL   = HypnoClass('bool', base=HYPNO_OBJECT)
@@ -58,13 +66,18 @@ class HypnoBool(HypnoBasic):
 class HypnoFunction(HypnoValue):
     hypno_type = HypnoClass('functype', base=None)
 
-    def __init__(self, label, args, code):
+    def __init__(self, label, args, code, definition=None):
+        self.fields = {}
         self.label = label
         self.args = args
         self.code = code
+        self.definition = definition
 
     def render(self):
         return 'function<%s>' % self.label
+
+    def is_method(self):
+        return self.definition is not None
 
 TOP_SCOPE = Env({
     'object': HYPNO_OBJECT,
